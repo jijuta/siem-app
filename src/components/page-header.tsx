@@ -35,9 +35,31 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({ title = "인시던트 현황", children }: PageHeaderProps) {
-  const { i18n } = useTranslation()
+  const { i18n, t } = useTranslation()
   const { theme, setTheme } = useTheme()
   const { dateRange, setDateRange, triggerRefresh } = useDateRange()
+
+  // Date range labels based on current language
+  const dateRangeLabels = {
+    '1d': i18n.language === 'ko' ? '최근 1일' : i18n.language === 'ja' ? '最近1日' : i18n.language === 'zh' ? '最近1天' : 'Last 1 day',
+    '2d': i18n.language === 'ko' ? '최근 2일' : i18n.language === 'ja' ? '最近2日' : i18n.language === 'zh' ? '最近2天' : 'Last 2 days',
+    '3d': i18n.language === 'ko' ? '최근 3일' : i18n.language === 'ja' ? '最近3日' : i18n.language === 'zh' ? '最近3天' : 'Last 3 days',
+    '7d': i18n.language === 'ko' ? '최근 7일' : i18n.language === 'ja' ? '最近7日' : i18n.language === 'zh' ? '最近7天' : 'Last 7 days',
+    '30d': i18n.language === 'ko' ? '최근 30일' : i18n.language === 'ja' ? '最近30日' : i18n.language === 'zh' ? '最近30天' : 'Last 30 days',
+  }
+
+  const dateRangeLabelsShort = {
+    '1d': i18n.language === 'ko' ? '1일' : i18n.language === 'ja' ? '1日' : i18n.language === 'zh' ? '1天' : '1d',
+    '2d': i18n.language === 'ko' ? '2일' : i18n.language === 'ja' ? '2日' : i18n.language === 'zh' ? '2天' : '2d',
+    '3d': i18n.language === 'ko' ? '3일' : i18n.language === 'ja' ? '3日' : i18n.language === 'zh' ? '3天' : '3d',
+    '7d': i18n.language === 'ko' ? '7일' : i18n.language === 'ja' ? '7日' : i18n.language === 'zh' ? '7天' : '7d',
+    '30d': i18n.language === 'ko' ? '30일' : i18n.language === 'ja' ? '30日' : i18n.language === 'zh' ? '30天' : '30d',
+  }
+
+  const refreshLabel = i18n.language === 'ko' ? '데이터 새로고침' : i18n.language === 'ja' ? 'データを更新' : i18n.language === 'zh' ? '刷新数据' : 'Refresh data'
+  const refreshTextLabel = i18n.language === 'ko' ? '새로고침' : i18n.language === 'ja' ? '更新' : i18n.language === 'zh' ? '刷新' : 'Refresh'
+  const filterLabel = i18n.language === 'ko' ? '필터' : i18n.language === 'ja' ? 'フィルタ' : i18n.language === 'zh' ? '过滤' : 'Filter'
+  const downloadLabel = i18n.language === 'ko' ? '다운로드' : i18n.language === 'ja' ? 'ダウンロード' : i18n.language === 'zh' ? '下载' : 'Download'
 
   return (
     <div className="sticky top-0 z-[100] h-[57px] border-b bg-background backdrop-blur-md shadow-sm">
@@ -60,11 +82,11 @@ export function PageHeader({ title = "인시던트 현황", children }: PageHead
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1d">최근 1일</SelectItem>
-              <SelectItem value="2d">최근 2일</SelectItem>
-              <SelectItem value="3d">최근 3일</SelectItem>
-              <SelectItem value="7d">최근 7일</SelectItem>
-              <SelectItem value="30d">최근 30일</SelectItem>
+              <SelectItem value="1d">{dateRangeLabels['1d']}</SelectItem>
+              <SelectItem value="2d">{dateRangeLabels['2d']}</SelectItem>
+              <SelectItem value="3d">{dateRangeLabels['3d']}</SelectItem>
+              <SelectItem value="7d">{dateRangeLabels['7d']}</SelectItem>
+              <SelectItem value="30d">{dateRangeLabels['30d']}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -72,7 +94,7 @@ export function PageHeader({ title = "인시던트 현황", children }: PageHead
             variant="outline"
             size="icon"
             onClick={triggerRefresh}
-            title="데이터 새로고침"
+            title={refreshLabel}
           >
             <RefreshCcw className="h-4 w-4" />
           </Button>
@@ -141,11 +163,11 @@ export function PageHeader({ title = "인시던트 현황", children }: PageHead
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1d">1일</SelectItem>
-              <SelectItem value="2d">2일</SelectItem>
-              <SelectItem value="3d">3일</SelectItem>
-              <SelectItem value="7d">7일</SelectItem>
-              <SelectItem value="30d">30일</SelectItem>
+              <SelectItem value="1d">{dateRangeLabelsShort['1d']}</SelectItem>
+              <SelectItem value="2d">{dateRangeLabelsShort['2d']}</SelectItem>
+              <SelectItem value="3d">{dateRangeLabelsShort['3d']}</SelectItem>
+              <SelectItem value="7d">{dateRangeLabelsShort['7d']}</SelectItem>
+              <SelectItem value="30d">{dateRangeLabelsShort['30d']}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -204,16 +226,16 @@ export function PageHeader({ title = "인시던트 현황", children }: PageHead
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={triggerRefresh}>
                 <RefreshCcw className="h-4 w-4 mr-2" />
-                새로고침
+                {refreshTextLabel}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <Filter className="h-4 w-4 mr-2" />
-                필터
+                {filterLabel}
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Download className="h-4 w-4 mr-2" />
-                다운로드
+                {downloadLabel}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
