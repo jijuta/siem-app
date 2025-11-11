@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { useTranslation } from 'react-i18next'
 import { PageHeader } from '@/components/page-header'
 import { RefreshCw } from 'lucide-react'
 
@@ -11,13 +12,14 @@ interface MetadataPageWrapperProps {
 
 export function MetadataPageWrapper({ children }: MetadataPageWrapperProps) {
   const pathname = usePathname()
+  const { i18n } = useTranslation()
   const [metadata, setMetadata] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
-        const lang = localStorage.getItem('i18nextLng') || 'ko'
+        const lang = i18n.language || 'ko'
         const res = await fetch(`/api/menu/metadata?path=${pathname}&lang=${lang}`)
         const data = await res.json()
 
@@ -32,7 +34,7 @@ export function MetadataPageWrapper({ children }: MetadataPageWrapperProps) {
     }
 
     fetchMetadata()
-  }, [pathname])
+  }, [pathname, i18n.language])
 
   if (loading) {
     return (
