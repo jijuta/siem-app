@@ -51,6 +51,9 @@ export function MetadataPageWrapper({ children }: MetadataPageWrapperProps) {
             {metadata.description}
           </p>
         )}
+        <div className="flex items-center justify-center min-h-[400px]">
+          <h3 className="text-2xl font-bold">{metadata?.title || 'Page'} Page</h3>
+        </div>
         {children}
       </div>
     </>
