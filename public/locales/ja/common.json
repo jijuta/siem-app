@@ -1,0 +1,56 @@
+{
+  "title": "SIEMダッシュボード",
+  "subtitle": "EDR/XDRプラットフォームのリアルタイムセキュリティ監視",
+  "nav": {
+    "dashboard": "ダッシュボード",
+    "crowdstrike": "CrowdStrike",
+    "cisco": "Cisco SecureX",
+    "fortinet": "Fortinet FortiEDR",
+    "cortex": "Cortex XDR",
+    "alerts": "アラート",
+    "reports": "レポート",
+    "settings": "設定"
+  },
+  "stats": {
+    "totalEvents": "総イベント数",
+    "last24Hours": "過去24時間",
+    "criticalAlerts": "重大アラート",
+    "highPriority": "高優先度",
+    "activeIncidents": "アクティブインシデント",
+    "detections": "検出",
+    "endpoints": "エンドポイント",
+    "threats": "脅威"
+  },
+  "vendors": {
+    "crowdstrike": {
+      "name": "CrowdStrike Falcon",
+      "description": "次世代エンドポイント保護"
+    },
+    "cisco": {
+      "name": "Cisco SecureX",
+      "description": "統合セキュリティプラットフォーム"
+    },
+    "fortinet": {
+      "name": "Fortinet FortiEDR",
+      "description": "自動脅威対応"
+    },
+    "cortex": {
+      "name": "Cortex XDR",
+      "description": "拡張検出と対応"
+    }
+  },
+  "actions": {
+    "viewDashboard": "ダッシュボードを表示",
+    "searchThreats": "脅威を検索",
+    "runAnalysis": "分析を実行",
+    "exportReport": "レポートをエクスポート",
+    "viewAlerts": "アラートを表示"
+  },
+  "severity": {
+    "critical": "重大",
+    "high": "高",
+    "medium": "中",
+    "low": "低",
+    "info": "情報"
+  }
+}

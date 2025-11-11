@@ -1,0 +1,56 @@
+{
+  "title": "SIEM 仪表板",
+  "subtitle": "EDR/XDR平台实时安全监控",
+  "nav": {
+    "dashboard": "仪表板",
+    "crowdstrike": "CrowdStrike",
+    "cisco": "Cisco SecureX",
+    "fortinet": "Fortinet FortiEDR",
+    "cortex": "Cortex XDR",
+    "alerts": "警报",
+    "reports": "报告",
+    "settings": "设置"
+  },
+  "stats": {
+    "totalEvents": "总事件数",
+    "last24Hours": "过去24小时",
+    "criticalAlerts": "严重警报",
+    "highPriority": "高优先级",
+    "activeIncidents": "活动事件",
+    "detections": "检测",
+    "endpoints": "端点",
+    "threats": "威胁"
+  },
+  "vendors": {
+    "crowdstrike": {
+      "name": "CrowdStrike Falcon",
+      "description": "下一代端点保护"
+    },
+    "cisco": {
+      "name": "Cisco SecureX",
+      "description": "统一安全平台"
+    },
+    "fortinet": {
+      "name": "Fortinet FortiEDR",
+      "description": "自动威胁响应"
+    },
+    "cortex": {
+      "name": "Cortex XDR",
+      "description": "扩展检测和响应"
+    }
+  },
+  "actions": {
+    "viewDashboard": "查看仪表板",
+    "searchThreats": "搜索威胁",
+    "runAnalysis": "运行分析",
+    "exportReport": "导出报告",
+    "viewAlerts": "查看警报"
+  },
+  "severity": {
+    "critical": "严重",
+    "high": "高",
+    "medium": "中",
+    "low": "低",
+    "info": "信息"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "title": "DeFender X",
+  "subtitle": "Real-time security monitoring across EDR/XDR platforms",
+  "nav": {
+    "dashboard": "Dashboard",
+    "crowdstrike": "CrowdStrike",
+    "cisco": "Cisco SecureX",
+    "fortinet": "Fortinet FortiEDR",
+    "cortex": "Cortex XDR",
+    "alerts": "Alerts",
+    "reports": "Reports",
+    "settings": "Settings"
+  },
+  "stats": {
+    "totalEvents": "Total Events",
+    "last24Hours": "Last 24 Hours",
+    "criticalAlerts": "Critical Alerts",
+    "highPriority": "High Priority",
+    "activeIncidents": "Active Incidents",
+    "detections": "Detections",
+    "endpoints": "Endpoints",
+    "threats": "Threats"
+  },
+  "vendors": {
+    "crowdstrike": {
+      "name": "CrowdStrike Falcon",
+      "description": "Next-generation endpoint protection"
+    },
+    "cisco": {
+      "name": "Cisco SecureX",
+      "description": "Unified security platform"
+    },
+    "fortinet": {
+      "name": "Fortinet FortiEDR",
+      "description": "Automated threat response"
+    },
+    "cortex": {
+      "name": "Cortex XDR",
+      "description": "Extended detection and response"
+    }
+  },
+  "actions": {
+    "viewDashboard": "View Dashboard",
+    "searchThreats": "Search Threats",
+    "runAnalysis": "Run Analysis",
+    "exportReport": "Export Report",
+    "viewAlerts": "View Alerts"
+  },
+  "severity": {
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "info": "Info"
+  }
+}

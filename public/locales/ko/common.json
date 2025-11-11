@@ -1,0 +1,56 @@
+{
+  "title": "DeFender X",
+  "subtitle": "EDR/XDR 플랫폼 실시간 보안 모니터링",
+  "nav": {
+    "dashboard": "대시보드",
+    "crowdstrike": "CrowdStrike",
+    "cisco": "Cisco SecureX",
+    "fortinet": "Fortinet FortiEDR",
+    "cortex": "Cortex XDR",
+    "alerts": "알림",
+    "reports": "보고서",
+    "settings": "설정"
+  },
+  "stats": {
+    "totalEvents": "전체 이벤트",
+    "last24Hours": "최근 24시간",
+    "criticalAlerts": "심각 알림",
+    "highPriority": "높음 우선순위",
+    "activeIncidents": "활성 인시던트",
+    "detections": "탐지",
+    "endpoints": "엔드포인트",
+    "threats": "위협"
+  },
+  "vendors": {
+    "crowdstrike": {
+      "name": "CrowdStrike Falcon",
+      "description": "차세대 엔드포인트 보호"
+    },
+    "cisco": {
+      "name": "Cisco SecureX",
+      "description": "통합 보안 플랫폼"
+    },
+    "fortinet": {
+      "name": "Fortinet FortiEDR",
+      "description": "자동화된 위협 대응"
+    },
+    "cortex": {
+      "name": "Cortex XDR",
+      "description": "확장된 탐지 및 대응"
+    }
+  },
+  "actions": {
+    "viewDashboard": "대시보드 보기",
+    "searchThreats": "위협 검색",
+    "runAnalysis": "분석 실행",
+    "exportReport": "보고서 내보내기",
+    "viewAlerts": "알림 보기"
+  },
+  "severity": {
+    "critical": "심각",
+    "high": "높음",
+    "medium": "중간",
+    "low": "낮음",
+    "info": "정보"
+  }
+}
