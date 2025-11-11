@@ -233,6 +233,8 @@ export default function MenuManagementPage() {
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set())
   const [parentMenuItem, setParentMenuItem] = useState<MenuItem | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [permissions, setPermissions] = useState<any[]>([])
+  const [selectedRole, setSelectedRole] = useState<string>('admin')
 
   // Form state
   const [formData, setFormData] = useState({
@@ -313,6 +315,44 @@ export default function MenuManagementPage() {
       }
     } catch (error) {
       console.error('Failed to fetch audit logs:', error)
+    }
+  }
+
+  // Fetch permissions
+  const fetchPermissions = async () => {
+    try {
+      const res = await fetch('/api/menu/permissions')
+      const data = await res.json()
+      if (data.success) {
+        setPermissions(data.data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch permissions:', error)
+    }
+  }
+
+  // Toggle permission
+  const togglePermission = async (menuItemId: number, role: string, currentValue: boolean) => {
+    try {
+      const res = await fetch('/api/menu/permissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          menu_item_id: menuItemId,
+          role: role,
+          can_view: !currentValue
+        })
+      })
+
+      if (res.ok) {
+        toast.success('Permission updated')
+        fetchPermissions()
+      } else {
+        toast.error('Failed to update permission')
+      }
+    } catch (error) {
+      toast.error('Error updating permission')
+      console.error(error)
     }
   }
 
@@ -577,6 +617,7 @@ export default function MenuManagementPage() {
               <TabsTrigger value="menu-items">Menu Items</TabsTrigger>
               <TabsTrigger value="vendors">Vendors</TabsTrigger>
               <TabsTrigger value="vendor-pages">Vendor Pages</TabsTrigger>
+              <TabsTrigger value="permissions">Permissions</TabsTrigger>
             </TabsList>
 
             <div className="flex items-center gap-2">
@@ -885,6 +926,138 @@ export default function MenuManagementPage() {
                     </div>
                   </div>
                 ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="permissions">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Role-Based Menu Permissions</CardTitle>
+                    <CardDescription>
+                      Manage which menus each role can access
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={fetchPermissions}
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Refresh
+                    </Button>
+                    <Select value={selectedRole} onValueChange={setSelectedRole}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">Admin (Full Access)</SelectItem>
+                        <SelectItem value="manager">Manager</SelectItem>
+                        <SelectItem value="analyst">Analyst</SelectItem>
+                        <SelectItem value="viewer">Viewer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {/* Statistics */}
+                <div className="grid gap-4 md:grid-cols-4 mb-6">
+                  {permissions.map((roleData) => {
+                    const totalMenus = roleData.permissions?.length || 0
+                    const accessibleMenus = roleData.permissions?.filter((p: any) => p.can_view).length || 0
+                    return (
+                      <Card key={roleData.role}>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-medium capitalize">
+                            {roleData.role}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">{accessibleMenus}/{totalMenus}</div>
+                          <p className="text-xs text-muted-foreground">menus accessible</p>
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
+                </div>
+
+                {/* Permission Matrix */}
+                <div className="border rounded-lg">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[300px]">Menu Item</TableHead>
+                        <TableHead className="text-center">Admin</TableHead>
+                        <TableHead className="text-center">Manager</TableHead>
+                        <TableHead className="text-center">Analyst</TableHead>
+                        <TableHead className="text-center">Viewer</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {categories.map((category) => {
+                        const categoryItems = menuItems.filter(
+                          (item) => item.category_id === category.id && !item.parent_id
+                        )
+
+                        if (categoryItems.length === 0) return null
+
+                        return (
+                          <React.Fragment key={category.id}>
+                            {/* Category Header Row */}
+                            <TableRow className="bg-muted/50">
+                              <TableCell colSpan={5} className="font-semibold">
+                                {category.label.ko || category.name}
+                              </TableCell>
+                            </TableRow>
+
+                            {/* Menu Items */}
+                            {categoryItems.map((item) => {
+                              const getPermission = (role: string) => {
+                                const roleData = permissions.find((p) => p.role === role)
+                                const perm = roleData?.permissions?.find(
+                                  (p: any) => p.menu_item_id === item.id
+                                )
+                                return perm?.can_view || false
+                              }
+
+                              return (
+                                <TableRow key={item.id}>
+                                  <TableCell className="pl-8">
+                                    <div className="flex items-center gap-2">
+                                      <span>{item.label.ko || item.name}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        ({item.href})
+                                      </span>
+                                    </div>
+                                  </TableCell>
+                                  {['admin', 'manager', 'analyst', 'viewer'].map((role) => (
+                                    <TableCell key={role} className="text-center">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => togglePermission(item.id, role, getPermission(role))}
+                                        className={getPermission(role) ? 'text-green-600' : 'text-gray-400'}
+                                      >
+                                        {getPermission(role) ? (
+                                          <Eye className="h-4 w-4" />
+                                        ) : (
+                                          <EyeOff className="h-4 w-4" />
+                                        )}
+                                      </Button>
+                                    </TableCell>
+                                  ))}
+                                </TableRow>
+                              )
+                            })}
+                          </React.Fragment>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
