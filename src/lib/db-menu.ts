@@ -328,4 +328,108 @@ export async function updateVendor(id: number, data: Partial<Vendor>): Promise<V
   return result.rows[0]
 }
 
+/**
+ * Get menu items filtered by user role
+ */
+export async function getMenuItemsByRole(role: string): Promise<MenuItem[]> {
+  const result = await pool.query(
+    `SELECT mi.*
+     FROM siem_app.menu_items mi
+     LEFT JOIN siem_app.menu_categories mc ON mi.category_id = mc.id
+     LEFT JOIN siem_app.menu_permissions mp ON mi.id = mp.menu_item_id
+     WHERE mi.is_active = true
+       AND (mp.role = $1 AND mp.can_view = true)
+     ORDER BY mc.order_index ASC, mi.order_index ASC`,
+    [role]
+  )
+
+  const items = result.rows
+  const itemMap = new Map<number, MenuItem>()
+  const rootItems: MenuItem[] = []
+
+  // First pass: create map of all items
+  items.forEach((item: MenuItem) => {
+    itemMap.set(item.id, { ...item, children: [] })
+  })
+
+  // Second pass: build hierarchy
+  items.forEach((item: MenuItem) => {
+    const menuItem = itemMap.get(item.id)!
+    if (item.parent_id) {
+      const parent = itemMap.get(item.parent_id)
+      if (parent) {
+        parent.children = parent.children || []
+        parent.children.push(menuItem)
+      }
+    } else {
+      rootItems.push(menuItem)
+    }
+  })
+
+  return rootItems
+}
+
+/**
+ * Get complete navigation structure filtered by role
+ */
+export async function getNavigationStructureByRole(role: string) {
+  const [categories, menuItems, vendors] = await Promise.all([
+    getMenuCategories(),
+    getMenuItemsByRole(role),
+    getVendorsWithPages(),
+  ])
+
+  return {
+    categories,
+    menuItems,
+    vendors,
+  }
+}
+
+/**
+ * Check if user has permission to view a menu item
+ */
+export async function hasMenuPermission(menuItemId: number, role: string): Promise<boolean> {
+  const result = await pool.query(
+    `SELECT can_view FROM siem_app.menu_permissions
+     WHERE menu_item_id = $1 AND role = $2`,
+    [menuItemId, role]
+  )
+  return result.rows[0]?.can_view ?? false
+}
+
+/**
+ * Set menu permission for a role
+ */
+export async function setMenuPermission(menuItemId: number, role: string, canView: boolean): Promise<void> {
+  await pool.query(
+    `INSERT INTO siem_app.menu_permissions (menu_item_id, role, can_view)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (menu_item_id, role)
+     DO UPDATE SET can_view = $3`,
+    [menuItemId, role, canView]
+  )
+}
+
+/**
+ * Get all roles with their menu permissions
+ */
+export async function getAllRolesWithPermissions() {
+  const result = await pool.query(
+    `SELECT
+       mp.role,
+       json_agg(json_build_object(
+         'menu_item_id', mp.menu_item_id,
+         'menu_name', mi.name,
+         'menu_label', mi.label,
+         'can_view', mp.can_view
+       ) ORDER BY mi.order_index) as permissions
+     FROM siem_app.menu_permissions mp
+     JOIN siem_app.menu_items mi ON mp.menu_item_id = mi.id
+     GROUP BY mp.role
+     ORDER BY mp.role`
+  )
+  return result.rows
+}
+
 export { pool }
