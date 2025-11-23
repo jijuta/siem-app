@@ -98,7 +98,9 @@ INSERT INTO siem_app.menu_items (category_id, name, label, href, icon, order_ind
 ((SELECT id FROM siem_app.menu_categories WHERE name = 'system_admin'), 'user_management', '{"ko": "사용자 관리", "en": "User Management"}'::jsonb, '/admin/user_management', 'Users', 2),
 ((SELECT id FROM siem_app.menu_categories WHERE name = 'system_admin'), 'role_management', '{"ko": "역할 관리", "en": "Role Management"}'::jsonb, '/admin/role_management', 'Shield', 3),
 ((SELECT id FROM siem_app.menu_categories WHERE name = 'system_admin'), 'audit_logs', '{"ko": "감사 로그", "en": "Audit Logs"}'::jsonb, '/admin/audit_logs', 'FileText', 4),
-((SELECT id FROM siem_app.menu_categories WHERE name = 'system_admin'), 'system_settings', '{"ko": "시스템 설정", "en": "System Settings"}'::jsonb, '/admin/system_settings', 'Settings', 5);
+((SELECT id FROM siem_app.menu_categories WHERE name = 'system_admin'), 'system_settings', '{"ko": "시스템 설정", "en": "System Settings"}'::jsonb, '/admin/system_settings', 'Settings', 5),
+((SELECT id FROM siem_app.menu_categories WHERE name = 'system_admin'), 'company_management', '{"ko": "회사 관리", "en": "Company Management"}'::jsonb, '/admin/company_management', 'Building2', 6),
+((SELECT id FROM siem_app.menu_categories WHERE name = 'system_admin'), 'department_management', '{"ko": "부서 관리", "en": "Department Management"}'::jsonb, '/admin/department_management', 'GitBranch', 7);
 
 -- Summary
 SELECT
