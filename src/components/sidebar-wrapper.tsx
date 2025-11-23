@@ -6,11 +6,13 @@
  */
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import { AppSidebar } from './app-sidebar'
 import { navigation as staticNavigation } from '@/lib/navigation'
 
 export function SidebarWrapper() {
+  const pathname = usePathname()
   const { i18n } = useTranslation()
   const [navigationData, setNavigationData] = useState(staticNavigation)
   const [isLoading, setIsLoading] = useState(true)
@@ -36,6 +38,11 @@ export function SidebarWrapper() {
 
     fetchNavigation()
   }, [i18n.language]) // Refetch when language changes
+
+  // Don't render sidebar on auth pages
+  if (pathname.startsWith('/auth')) {
+    return null
+  }
 
   return <AppSidebar navigationData={navigationData} />
 }

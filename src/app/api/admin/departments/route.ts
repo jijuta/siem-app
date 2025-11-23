@@ -1,0 +1,206 @@
+import { NextResponse } from 'next/server'
+import { auth } from '@/lib/auth'
+import { query } from '@/lib/db'
+
+// GET - List all departments with pagination and tree structure
+export async function GET(request: Request) {
+  try {
+    const session = await auth()
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const search = searchParams.get('search') || ''
+    const companyId = searchParams.get('companyId')
+    const offset = (page - 1) * limit
+
+    let whereClause = 'WHERE d.is_active = true'
+    const params: any[] = []
+    let paramIndex = 1
+
+    if (companyId) {
+      whereClause += ` AND d.company_id = $${paramIndex}`
+      params.push(companyId)
+      paramIndex++
+    }
+
+    if (search) {
+      whereClause += ` AND (
+        d.code ILIKE $${paramIndex} OR
+        d.name::text ILIKE $${paramIndex} OR
+        c.name::text ILIKE $${paramIndex}
+      )`
+      params.push(`%${search}%`)
+      paramIndex++
+    }
+
+    // Get total count
+    const countResult = await query(
+      `SELECT COUNT(*) as total
+       FROM "Department" d
+       LEFT JOIN "Company" c ON d.company_id = c.id
+       ${whereClause}`,
+      params
+    )
+
+    // Get departments with company info and user count
+    const departmentsQuery = `
+      SELECT
+        d.*,
+        c.name as company_name,
+        c.code as company_code,
+        parent.name as parent_name,
+        (SELECT COUNT(*) FROM siem_app.users WHERE department_id = d.id) as user_count
+      FROM "Department" d
+      LEFT JOIN "Company" c ON d.company_id = c.id
+      LEFT JOIN "Department" parent ON d.parent_id = parent.id
+      ${whereClause}
+      ORDER BY d.company_id, d.path
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `
+
+    params.push(limit, offset)
+    const result = await query(departmentsQuery, params)
+
+    const total = parseInt(countResult.rows[0].total)
+
+    return NextResponse.json({
+      success: true,
+      departments: result.rows,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    })
+  } catch (error) {
+    console.error('Get departments error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST - Create new department
+export async function POST(request: Request) {
+  try {
+    const session = await auth()
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    const { company_id, parent_id, code, name, description } = await request.json()
+
+    // Validate required fields
+    if (!company_id || !code || !name) {
+      return NextResponse.json(
+        { error: 'Company, code and name are required' },
+        { status: 400 }
+      )
+    }
+
+    // Validate name has all required languages
+    if (!name.ko || !name.en || !name.ja || !name.zh) {
+      return NextResponse.json(
+        { error: 'Name must include all languages (ko, en, ja, zh)' },
+        { status: 400 }
+      )
+    }
+
+    // Check if code already exists in the company
+    const existingDept = await query(
+      'SELECT id FROM "Department" WHERE company_id = $1 AND code = $2',
+      [company_id, code]
+    )
+
+    if (existingDept.rows.length > 0) {
+      return NextResponse.json(
+        { error: 'Department code already exists in this company' },
+        { status: 400 }
+      )
+    }
+
+    // Calculate level and path
+    let level = 0
+    let path = ''
+
+    if (parent_id) {
+      const parent = await query(
+        'SELECT level, path FROM "Department" WHERE id = $1',
+        [parent_id]
+      )
+
+      if (parent.rows.length === 0) {
+        return NextResponse.json(
+          { error: 'Parent department not found' },
+          { status: 404 }
+        )
+      }
+
+      level = parent.rows[0].level + 1
+      // Path will be set after INSERT to use the new ID
+    }
+
+    // Insert department
+    const result = await query(
+      `INSERT INTO "Department"
+       (company_id, parent_id, code, name, description, level, path, created_by, updated_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8)
+       RETURNING *`,
+      [
+        company_id,
+        parent_id || null,
+        code,
+        JSON.stringify(name),
+        description ? JSON.stringify(description) : null,
+        level,
+        '/', // Temporary path
+        session.user.id
+      ]
+    )
+
+    const newDept = result.rows[0]
+
+    // Update path with the new ID
+    if (parent_id) {
+      const parent = await query(
+        'SELECT path FROM "Department" WHERE id = $1',
+        [parent_id]
+      )
+      path = `${parent.rows[0].path}/${newDept.id}`
+    } else {
+      path = `/${newDept.id}`
+    }
+
+    await query(
+      'UPDATE "Department" SET path = $1 WHERE id = $2',
+      [path, newDept.id]
+    )
+
+    newDept.path = path
+
+    return NextResponse.json({
+      success: true,
+      department: newDept
+    })
+  } catch (error) {
+    console.error('Create department error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

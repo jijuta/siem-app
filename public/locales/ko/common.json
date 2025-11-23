@@ -52,5 +52,10 @@
     "medium": "중간",
     "low": "낮음",
     "info": "정보"
+  },
+  "userMenu": {
+    "profile": "프로필",
+    "logout": "로그아웃",
+    "guest": "게스트"
   }
 }

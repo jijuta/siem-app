@@ -1,0 +1,12 @@
+{
+  "title": "Login",
+  "description": "Login to DeFender X SIEM",
+  "email": "Email",
+  "password": "Password",
+  "login": "Login",
+  "signup": "Sign up",
+  "forgotPassword": "Forgot password?",
+  "noAccount": "Don't have an account?",
+  "invalidCredentials": "Invalid email or password",
+  "loginError": "An error occurred during login"
+}

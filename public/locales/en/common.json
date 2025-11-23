@@ -52,5 +52,10 @@
     "medium": "Medium",
     "low": "Low",
     "info": "Info"
+  },
+  "userMenu": {
+    "profile": "Profile",
+    "logout": "Logout",
+    "guest": "Guest"
   }
 }

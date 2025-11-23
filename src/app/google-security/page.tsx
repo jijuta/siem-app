@@ -1,5 +1,5 @@
 import { MetadataPageWrapper } from '@/components/metadata-page-wrapper'
 
-export default function VendorGoogle-securityPage() {
+export default function GoogleSecurityPage() {
   return <MetadataPageWrapper />
 }

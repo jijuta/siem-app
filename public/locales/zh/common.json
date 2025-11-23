@@ -52,5 +52,10 @@
     "medium": "中",
     "low": "低",
     "info": "信息"
+  },
+  "userMenu": {
+    "profile": "个人资料",
+    "logout": "登出",
+    "guest": "访客"
   }
 }

@@ -1,0 +1,627 @@
+"use client"
+
+import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { PageHeader } from '@/components/page-header'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Building2,
+  Plus,
+  Edit,
+  Trash2,
+  Search,
+  CheckCircle,
+  MoreVertical
+} from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { toast } from 'sonner'
+import { Textarea } from "@/components/ui/textarea"
+
+interface Company {
+  id: number
+  code: string
+  name: {
+    ko: string
+    en: string
+    ja: string
+    zh: string
+  }
+  description?: {
+    ko: string
+    en: string
+    ja: string
+    zh: string
+  }
+  address?: string
+  phone?: string
+  email?: string
+  website?: string
+  logo_url?: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export default function CompanyManagementPage() {
+  const { t, i18n } = useTranslation('companyManagement')
+
+  const [companies, setCompanies] = useState<Company[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
+  const [formData, setFormData] = useState({
+    code: '',
+    name: { ko: '', en: '', ja: '', zh: '' },
+    description: { ko: '', en: '', ja: '', zh: '' },
+    address: '',
+    phone: '',
+    email: '',
+    website: '',
+    logo_url: '',
+    is_active: true
+  })
+
+  // Fetch companies
+  useEffect(() => {
+    fetchCompanies()
+  }, [])
+
+  const fetchCompanies = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/admin/companies')
+      const data = await response.json()
+      if (data.success) {
+        setCompanies(data.companies)
+      }
+    } catch (error) {
+      console.error('Failed to fetch companies:', error)
+      toast.error(t('error'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCreateCompany = async () => {
+    try {
+      // Validate required fields
+      if (!formData.code) {
+        toast.error(t('codeRequired'))
+        return
+      }
+      if (!formData.name.ko || !formData.name.en || !formData.name.ja || !formData.name.zh) {
+        toast.error(t('nameRequired'))
+        return
+      }
+
+      const response = await fetch('/api/admin/companies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+      const data = await response.json()
+
+      if (data.success) {
+        toast.success(t('companyCreated'))
+        setIsDialogOpen(false)
+        resetForm()
+        fetchCompanies()
+      } else {
+        toast.error(data.error || t('error'))
+      }
+    } catch (error) {
+      console.error('Failed to create company:', error)
+      toast.error(t('error'))
+    }
+  }
+
+  const handleUpdateCompany = async () => {
+    if (!selectedCompany) return
+
+    try {
+      // Validate required fields
+      if (!formData.code) {
+        toast.error(t('codeRequired'))
+        return
+      }
+      if (!formData.name.ko || !formData.name.en || !formData.name.ja || !formData.name.zh) {
+        toast.error(t('nameRequired'))
+        return
+      }
+
+      const response = await fetch(`/api/admin/companies/${selectedCompany.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+      const data = await response.json()
+
+      if (data.success) {
+        toast.success(t('companyUpdated'))
+        setIsDialogOpen(false)
+        setSelectedCompany(null)
+        resetForm()
+        fetchCompanies()
+      } else {
+        toast.error(data.error || t('error'))
+      }
+    } catch (error) {
+      console.error('Failed to update company:', error)
+      toast.error(t('error'))
+    }
+  }
+
+  const handleDeleteCompany = async () => {
+    if (!selectedCompany) return
+
+    try {
+      const response = await fetch(`/api/admin/companies/${selectedCompany.id}`, {
+        method: 'DELETE'
+      })
+      const data = await response.json()
+
+      if (data.success) {
+        toast.success(t('companyDeleted'))
+        setIsDeleteDialogOpen(false)
+        setSelectedCompany(null)
+        fetchCompanies()
+      } else {
+        toast.error(data.error || t('error'))
+      }
+    } catch (error) {
+      console.error('Failed to delete company:', error)
+      toast.error(t('error'))
+    }
+  }
+
+  const resetForm = () => {
+    setFormData({
+      code: '',
+      name: { ko: '', en: '', ja: '', zh: '' },
+      description: { ko: '', en: '', ja: '', zh: '' },
+      address: '',
+      phone: '',
+      email: '',
+      website: '',
+      logo_url: '',
+      is_active: true
+    })
+  }
+
+  const openCreateDialog = () => {
+    resetForm()
+    setSelectedCompany(null)
+    setIsDialogOpen(true)
+  }
+
+  const openEditDialog = (company: Company) => {
+    setSelectedCompany(company)
+    setFormData({
+      code: company.code,
+      name: company.name || { ko: '', en: '', ja: '', zh: '' },
+      description: company.description || { ko: '', en: '', ja: '', zh: '' },
+      address: company.address || '',
+      phone: company.phone || '',
+      email: company.email || '',
+      website: company.website || '',
+      logo_url: company.logo_url || '',
+      is_active: company.is_active
+    })
+    setIsDialogOpen(true)
+  }
+
+  const openDeleteDialog = (company: Company) => {
+    setSelectedCompany(company)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const filteredCompanies = companies.filter(company => {
+    const searchLower = searchQuery.toLowerCase()
+    return (
+      company.code.toLowerCase().includes(searchLower) ||
+      company.name?.ko?.toLowerCase().includes(searchLower) ||
+      company.name?.en?.toLowerCase().includes(searchLower) ||
+      company.name?.ja?.toLowerCase().includes(searchLower) ||
+      company.name?.zh?.toLowerCase().includes(searchLower)
+    )
+  })
+
+  const stats = {
+    total: companies.length,
+    active: companies.filter(c => c.is_active).length
+  }
+
+  const getCurrentLanguageName = (company: Company) => {
+    const lang = i18n.language as 'ko' | 'en' | 'ja' | 'zh'
+    return company.name?.[lang] || company.name?.ko || company.code
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-muted-foreground">{t('loading')}</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full">
+      <PageHeader title={t('title')} />
+
+      <div className="w-full px-8 py-6 space-y-6">
+        {/* Header Actions */}
+        <div className="flex items-center justify-between">
+          <p className="text-muted-foreground">{t('description')}</p>
+          <Button onClick={openCreateDialog}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('addCompany')}
+          </Button>
+        </div>
+
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{t('totalCompanies')}</CardTitle>
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.total}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{t('activeCompanies')}</CardTitle>
+            <CheckCircle className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.active}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Search */}
+      <div className="flex items-center space-x-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder={t('search')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      </div>
+
+      {/* Companies Table */}
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('code')}</TableHead>
+                <TableHead>{t('name')}</TableHead>
+                <TableHead>{t('email')}</TableHead>
+                <TableHead>{t('phone')}</TableHead>
+                <TableHead>{t('status')}</TableHead>
+                <TableHead className="text-right">{t('actions')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredCompanies.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    {t('noCompanies')}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredCompanies.map((company) => (
+                  <TableRow key={company.id}>
+                    <TableCell>
+                      <span className="font-mono text-sm">{company.code}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-medium">{getCurrentLanguageName(company)}</span>
+                    </TableCell>
+                    <TableCell>{company.email || '-'}</TableCell>
+                    <TableCell>{company.phone || '-'}</TableCell>
+                    <TableCell>
+                      {company.is_active ? (
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800">
+                          {t('active')}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800">
+                          {t('inactive')}
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => openEditDialog(company)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            {t('edit')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => openDeleteDialog(company)}
+                            className="text-red-600 dark:text-red-400"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            {t('delete')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Create/Edit Company Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedCompany ? t('editCompany') : t('createCompany')}</DialogTitle>
+            <DialogDescription>
+              {selectedCompany ? '회사 정보를 수정합니다' : '새로운 회사를 생성합니다'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <Tabs defaultValue="basic" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="basic">기본 정보</TabsTrigger>
+              <TabsTrigger value="multilingual">다국어</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="basic" className="space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="code">{t('code')} *</Label>
+                <Input
+                  id="code"
+                  value={formData.code}
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                  disabled={!!selectedCompany}
+                  placeholder="COMP001"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="address">{t('address')}</Label>
+                <Input
+                  id="address"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="phone">{t('phone')}</Label>
+                <Input
+                  id="phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="email">{t('email')}</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="website">{t('website')}</Label>
+                <Input
+                  id="website"
+                  value={formData.website}
+                  onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                  placeholder="https://example.com"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="logo_url">{t('logoUrl')}</Label>
+                <Input
+                  id="logo_url"
+                  value={formData.logo_url}
+                  onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
+                  placeholder="https://example.com/logo.png"
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="multilingual" className="space-y-4">
+              <div className="space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name_ko">{t('nameKo')} *</Label>
+                  <Input
+                    id="name_ko"
+                    value={formData.name.ko}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      name: { ...formData.name, ko: e.target.value }
+                    })}
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="name_en">{t('nameEn')} *</Label>
+                  <Input
+                    id="name_en"
+                    value={formData.name.en}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      name: { ...formData.name, en: e.target.value }
+                    })}
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="name_ja">{t('nameJa')} *</Label>
+                  <Input
+                    id="name_ja"
+                    value={formData.name.ja}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      name: { ...formData.name, ja: e.target.value }
+                    })}
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="name_zh">{t('nameZh')} *</Label>
+                  <Input
+                    id="name_zh"
+                    value={formData.name.zh}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      name: { ...formData.name, zh: e.target.value }
+                    })}
+                  />
+                </div>
+
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-medium mb-3">{t('description_field')}</h4>
+
+                  <div className="space-y-3">
+                    <div className="grid gap-2">
+                      <Label htmlFor="desc_ko">{t('descriptionKo')}</Label>
+                      <Textarea
+                        id="desc_ko"
+                        value={formData.description.ko}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          description: { ...formData.description, ko: e.target.value }
+                        })}
+                        rows={2}
+                      />
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="desc_en">{t('descriptionEn')}</Label>
+                      <Textarea
+                        id="desc_en"
+                        value={formData.description.en}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          description: { ...formData.description, en: e.target.value }
+                        })}
+                        rows={2}
+                      />
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="desc_ja">{t('descriptionJa')}</Label>
+                      <Textarea
+                        id="desc_ja"
+                        value={formData.description.ja}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          description: { ...formData.description, ja: e.target.value }
+                        })}
+                        rows={2}
+                      />
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="desc_zh">{t('descriptionZh')}</Label>
+                      <Textarea
+                        id="desc_zh"
+                        value={formData.description.zh}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          description: { ...formData.description, zh: e.target.value }
+                        })}
+                        rows={2}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              {t('cancel')}
+            </Button>
+            <Button onClick={selectedCompany ? handleUpdateCompany : handleCreateCompany}>
+              {t('save')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('deleteCompany')}</DialogTitle>
+            <DialogDescription>
+              {t('confirmDelete')}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              {t('cancel')}
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteCompany}>
+              {t('delete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      </div>
+    </div>
+  )
+}

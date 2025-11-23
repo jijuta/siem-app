@@ -63,8 +63,18 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { navigation as defaultNavigation } from "@/lib/navigation"
 import { hydrateNavigationIcons } from "@/lib/icon-mapper"
+import { useSession, signOut } from 'next-auth/react'
+import { User as UserIcon, ChevronUp } from 'lucide-react'
 
 // Props interface for AppSidebar
 interface AppSidebarProps {
@@ -139,6 +149,68 @@ const SidebarNavItem = React.memo(({
 
 SidebarNavItem.displayName = 'SidebarNavItem'
 
+// User Menu Component
+function UserMenu({ state }: { state: string }) {
+  const { data: session } = useSession()
+  const { t } = useTranslation()
+
+  const userName = session?.user?.name || t('userMenu.guest')
+  const userEmail = session?.user?.email || ''
+  const userInitials = userName.substring(0, 2).toUpperCase()
+
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: '/auth/login' })
+  }
+
+  return (
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-accent rounded-md transition-colors">
+              <Avatar className="h-7 w-7">
+                <AvatarImage src={session?.user?.avatar_url || undefined} />
+                <AvatarFallback className="text-xs">{userInitials}</AvatarFallback>
+              </Avatar>
+              {state === "expanded" && (
+                <>
+                  <div className="flex flex-col flex-1">
+                    <span className="text-sm font-medium">{userName}</span>
+                    <span className="text-xs text-muted-foreground truncate max-w-[150px]">
+                      {userEmail}
+                    </span>
+                  </div>
+                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                </>
+              )}
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="top" align="end" className="w-56">
+            <DropdownMenuLabel>
+              <div className="flex flex-col">
+                <span className="font-medium">{userName}</span>
+                <span className="text-xs text-muted-foreground">{userEmail}</span>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/profile" className="flex items-center gap-2 cursor-pointer">
+                <UserIcon className="h-4 w-4" />
+                {t('userMenu.profile')}
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 text-destructive cursor-pointer">
+              <LogOut className="h-4 w-4" />
+              {t('userMenu.logout')}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarMenuItem>
+    </SidebarMenu>
+  )
+}
+
 // 모든 하드코딩 배열 제거됨 - DB에서 가져온 데이터 사용
 
 export function AppSidebar({ navigationData = defaultNavigation }: AppSidebarProps = {}) {
@@ -158,7 +230,13 @@ export function AppSidebar({ navigationData = defaultNavigation }: AppSidebarPro
   }, [navigationData])
   const [isPinned, setIsPinned] = React.useState(true) // Default to pinned
   const [isHovered, setIsHovered] = React.useState(false)
+  const [isMounted, setIsMounted] = React.useState(false) // Track hydration
   const hoverTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+
+  // Mark component as mounted to prevent hydration errors
+  React.useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   // Load pinned state from localStorage on mount
   React.useEffect(() => {
@@ -251,16 +329,16 @@ export function AppSidebar({ navigationData = defaultNavigation }: AppSidebarPro
           <div className="flex items-center justify-between h-full px-2">
             <Link href="/" className={cn(
               "flex items-center gap-3",
-              state === "collapsed" && "justify-center w-full"
+              isMounted && state === "collapsed" && "justify-center w-full"
             )}>
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 text-white shadow-md shrink-0">
                 <span className="text-sm font-bold">DX</span>
               </div>
-              {state === "expanded" && (
+              {isMounted && state === "expanded" && (
                 <span className="text-base font-semibold whitespace-nowrap">DeFender X</span>
               )}
             </Link>
-            {state === "expanded" && !isMobile && (
+            {isMounted && state === "expanded" && !isMobile && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -282,7 +360,7 @@ export function AppSidebar({ navigationData = defaultNavigation }: AppSidebarPro
           {navigation.categories && navigation.categories.map((category: any, index: number) => (
             <React.Fragment key={category.id || category.name}>
               <SidebarGroup>
-                {state === "expanded" && (
+                {isMounted && state === "expanded" && (
                   <SidebarGroupLabel>{category.label}</SidebarGroupLabel>
                 )}
                 <SidebarGroupContent>
@@ -331,24 +409,7 @@ export function AppSidebar({ navigationData = defaultNavigation }: AppSidebarPro
         </SidebarContent>
 
         <SidebarFooter className="border-t">
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <div className="flex items-center gap-2 px-2 py-1.5">
-                <Avatar className="h-7 w-7">
-                  <AvatarImage src="/avatar.png" />
-                  <AvatarFallback className="text-xs">U</AvatarFallback>
-                </Avatar>
-                {state === "expanded" && (
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">사용자</span>
-                    <span className="text-xs text-muted-foreground">
-                      user@company.com
-                    </span>
-                  </div>
-                )}
-              </div>
-            </SidebarMenuItem>
-          </SidebarMenu>
+          <UserMenu state={state} />
         </SidebarFooter>
       </Sidebar>
     </TooltipProvider>

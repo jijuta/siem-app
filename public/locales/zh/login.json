@@ -1,0 +1,12 @@
+{
+  "title": "登录",
+  "description": "登录到 DeFender X SIEM",
+  "email": "电子邮件",
+  "password": "密码",
+  "login": "登录",
+  "signup": "注册",
+  "forgotPassword": "忘记密码？",
+  "noAccount": "没有账户？",
+  "invalidCredentials": "电子邮件或密码无效",
+  "loginError": "登录时发生错误"
+}

@@ -52,5 +52,10 @@
     "medium": "中",
     "low": "低",
     "info": "情報"
+  },
+  "userMenu": {
+    "profile": "プロフィール",
+    "logout": "ログアウト",
+    "guest": "ゲスト"
   }
 }
