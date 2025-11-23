@@ -54,6 +54,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { toast } from 'sonner'
+import { UserProfileModal } from '@/components/admin/UserProfileModal'
 
 interface User {
   id: number
@@ -77,7 +78,9 @@ export default function UserManagementPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [profileUser, setProfileUser] = useState<User | null>(null)
   const [formData, setFormData] = useState({
     email: '',
     name: '',
@@ -396,6 +399,13 @@ export default function UserManagementPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
                           <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => {
+                            setProfileUser(user)
+                            setIsProfileModalOpen(true)
+                          }}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            프로필 보기
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => openEditDialog(user)}>
                             <Edit className="mr-2 h-4 w-4" />
                             {t('edit')}
@@ -517,6 +527,16 @@ export default function UserManagementPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* User Profile Modal */}
+      <UserProfileModal
+        open={isProfileModalOpen}
+        onOpenChange={setIsProfileModalOpen}
+        user={profileUser}
+        onEdit={(user) => {
+          openEditDialog(user)
+        }}
+      />
       </div>
     </div>
   )
