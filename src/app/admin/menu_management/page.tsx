@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, use } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -220,6 +221,7 @@ function SortableRow({ item, onToggle, onEdit, onDelete, onAddChild, depth = 0, 
 }
 
 export default function MenuManagementPage() {
+  const router = useRouter()
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [categories, setCategories] = useState<MenuCategory[]>([])
   const [vendors, setVendors] = useState<Vendor[]>([])
@@ -493,6 +495,7 @@ export default function MenuManagementPage() {
         toast.success(selectedItem ? 'Menu item updated' : 'Menu item created')
         setDialogOpen(false)
         fetchData()
+        router.refresh() // Refresh sidebar navigation
       } else {
         toast.error('Failed to save menu item')
       }
@@ -514,6 +517,7 @@ export default function MenuManagementPage() {
       if (res.ok) {
         toast.success(`Menu item ${item.is_active ? 'deactivated' : 'activated'}`)
         fetchData()
+        router.refresh() // Refresh sidebar navigation
       } else {
         toast.error('Failed to update menu item')
       }
@@ -535,6 +539,7 @@ export default function MenuManagementPage() {
       if (res.ok) {
         toast.success('Menu item deleted')
         fetchData()
+        router.refresh() // Refresh sidebar navigation
       } else {
         toast.error('Failed to delete menu item')
       }
