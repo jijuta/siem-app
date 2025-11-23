@@ -28,12 +28,17 @@ export async function GET() {
       )
     }
 
-    // Get all users
+    // Get all users with company and department info
     const result = await query(
-      `SELECT id, email, name, role, avatar_url, phone, department,
-              is_active, email_verified, created_at, last_login_at
-       FROM siem_app.users
-       ORDER BY created_at DESC`
+      `SELECT u.id, u.email, u.name, u.role, u.avatar_url, u.phone, u.department,
+              u.company_id, u.department_id,
+              u.is_active, u.email_verified, u.created_at, u.last_login_at,
+              c.name as company_name, c.code as company_code,
+              d.name as department_name, d.code as department_code
+       FROM siem_app.users u
+       LEFT JOIN "Company" c ON u.company_id = c.id
+       LEFT JOIN "Department" d ON u.department_id = d.id
+       ORDER BY u.created_at DESC`
     )
 
     return NextResponse.json({
@@ -74,7 +79,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const { email, name, password, role, department, phone } = await request.json()
+    const { email, name, password, role, department, phone, company_id, department_id } = await request.json()
 
     // Validate required fields
     if (!email || !name || !password) {
@@ -102,10 +107,10 @@ export async function POST(request: Request) {
 
     // Create user
     const result = await query(
-      `INSERT INTO siem_app.users (email, name, password_hash, role, department, phone, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, true)
-       RETURNING id, email, name, role, avatar_url, phone, department, is_active, created_at`,
-      [email, name, passwordHash, role || 'viewer', department || null, phone || null]
+      `INSERT INTO siem_app.users (email, name, password_hash, role, department, phone, company_id, department_id, is_active, email_verified)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, true)
+       RETURNING id, email, name, role, avatar_url, phone, department, company_id, department_id, is_active, created_at`,
+      [email, name, passwordHash, role || 'viewer', department || null, phone || null, company_id || null, department_id || null]
     )
 
     return NextResponse.json({

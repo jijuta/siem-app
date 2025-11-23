@@ -43,8 +43,9 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Search, Building2, Users, Pencil, Trash2, Network, GitBranch } from 'lucide-react'
+import { Plus, Search, Building2, Users, Pencil, Trash2, Network, GitBranch, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
+import { UserFormModal } from '@/components/admin/UserFormModal'
 
 interface Company {
   id: number
@@ -86,8 +87,10 @@ export default function DepartmentManagementPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false)
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null)
   const [deletingDepartment, setDeletingDepartment] = useState<Department | null>(null)
+  const [selectedDeptForUser, setSelectedDeptForUser] = useState<Department | null>(null)
   const [selectedCompanyFilter, setSelectedCompanyFilter] = useState<string>('all')
 
   const [formData, setFormData] = useState<DepartmentFormData>({
@@ -401,6 +404,17 @@ export default function DepartmentManagementPage() {
                         <Button
                           variant="ghost"
                           size="sm"
+                          onClick={() => {
+                            setSelectedDeptForUser(department)
+                            setIsUserModalOpen(true)
+                          }}
+                          title="사용자 등록"
+                        >
+                          <UserPlus className="h-4 w-4 text-blue-600" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => handleAddChild(department)}
                           title={t('addChildDepartment')}
                         >
@@ -631,6 +645,18 @@ export default function DepartmentManagementPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* User Form Modal */}
+      <UserFormModal
+        open={isUserModalOpen}
+        onOpenChange={setIsUserModalOpen}
+        companyId={selectedDeptForUser?.company_id || null}
+        departmentId={selectedDeptForUser?.id || null}
+        onSuccess={() => {
+          toast.success('사용자가 성공적으로 등록되었습니다')
+          setIsUserModalOpen(false)
+        }}
+      />
     </>
   )
 }
