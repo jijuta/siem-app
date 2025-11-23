@@ -37,7 +37,8 @@ import {
   Trash2,
   Search,
   CheckCircle,
-  MoreVertical
+  MoreVertical,
+  Network
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -48,6 +49,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { toast } from 'sonner'
+import { DepartmentFormModal } from '@/components/admin/DepartmentFormModal'
 import { Textarea } from "@/components/ui/textarea"
 
 interface Company {
@@ -83,7 +85,9 @@ export default function CompanyManagementPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isDepartmentModalOpen, setIsDepartmentModalOpen] = useState(false)
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
+  const [selectedCompanyForDept, setSelectedCompanyForDept] = useState<Company | null>(null)
   const [formData, setFormData] = useState({
     code: '',
     name: { ko: '', en: '', ja: '', zh: '' },
@@ -373,6 +377,13 @@ export default function CompanyManagementPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
                           <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => {
+                            setSelectedCompanyForDept(company)
+                            setIsDepartmentModalOpen(true)
+                          }}>
+                            <Network className="mr-2 h-4 w-4" />
+                            부서 관리
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => openEditDialog(company)}>
                             <Edit className="mr-2 h-4 w-4" />
                             {t('edit')}
@@ -616,6 +627,17 @@ export default function CompanyManagementPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Department Form Modal */}
+      <DepartmentFormModal
+        open={isDepartmentModalOpen}
+        onOpenChange={setIsDepartmentModalOpen}
+        companyId={selectedCompanyForDept?.id || null}
+        onSuccess={() => {
+          toast.success('부서가 성공적으로 등록되었습니다')
+          setIsDepartmentModalOpen(false)
+        }}
+      />
       </div>
     </div>
   )
