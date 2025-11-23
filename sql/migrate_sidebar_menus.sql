@@ -94,11 +94,11 @@ INSERT INTO siem_app.menu_categories (name, label, icon, order_index) VALUES
 ('system_admin', '{"ko": "시스템 관리", "en": "System Administration", "ja": "システム管理", "zh": "系统管理"}'::jsonb, 'Settings', 90);
 
 INSERT INTO siem_app.menu_items (category_id, name, label, href, icon, order_index) VALUES
-((SELECT id FROM siem_app.menu_categories WHERE name = 'system_admin'), 'menu_management', '{"ko": "메뉴 관리", "en": "Menu Management"}'::jsonb, '/admin/menu-management', 'Settings', 1),
-((SELECT id FROM siem_app.menu_categories WHERE name = 'system_admin'), 'user_management', '{"ko": "사용자 관리", "en": "User Management"}'::jsonb, '/admin/users', 'Users', 2),
-((SELECT id FROM siem_app.menu_categories WHERE name = 'system_admin'), 'role_management', '{"ko": "역할 관리", "en": "Role Management"}'::jsonb, '/admin/roles', 'Shield', 3),
-((SELECT id FROM siem_app.menu_categories WHERE name = 'system_admin'), 'audit_logs', '{"ko": "감사 로그", "en": "Audit Logs"}'::jsonb, '/admin/audit', 'FileText', 4),
-((SELECT id FROM siem_app.menu_categories WHERE name = 'system_admin'), 'system_settings', '{"ko": "시스템 설정", "en": "System Settings"}'::jsonb, '/admin/settings', 'Settings', 5);
+((SELECT id FROM siem_app.menu_categories WHERE name = 'system_admin'), 'menu_management', '{"ko": "메뉴 관리", "en": "Menu Management"}'::jsonb, '/admin/menu_management', 'Settings', 1),
+((SELECT id FROM siem_app.menu_categories WHERE name = 'system_admin'), 'user_management', '{"ko": "사용자 관리", "en": "User Management"}'::jsonb, '/admin/user_management', 'Users', 2),
+((SELECT id FROM siem_app.menu_categories WHERE name = 'system_admin'), 'role_management', '{"ko": "역할 관리", "en": "Role Management"}'::jsonb, '/admin/role_management', 'Shield', 3),
+((SELECT id FROM siem_app.menu_categories WHERE name = 'system_admin'), 'audit_logs', '{"ko": "감사 로그", "en": "Audit Logs"}'::jsonb, '/admin/audit_logs', 'FileText', 4),
+((SELECT id FROM siem_app.menu_categories WHERE name = 'system_admin'), 'system_settings', '{"ko": "시스템 설정", "en": "System Settings"}'::jsonb, '/admin/system_settings', 'Settings', 5);
 
 -- Summary
 SELECT
