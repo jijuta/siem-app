@@ -17,11 +17,14 @@ export async function GET() {
 
     // Check if user is admin
     const userResult = await query(
-      'SELECT role FROM siem_app.users WHERE id = $1',
+      `SELECT r.code as role
+       FROM siem_app.users u
+       JOIN siem_app.roles r ON u.role_id = r.id
+       WHERE u.id = $1`,
       [session.user.id]
     )
 
-    if (userResult.rows[0]?.role !== 'admin') {
+    if (userResult.rows[0]?.role !== 'admin' && userResult.rows[0]?.role !== 'super_admin') {
       return NextResponse.json(
         { error: 'Forbidden: Admin access required' },
         { status: 403 }
@@ -30,14 +33,16 @@ export async function GET() {
 
     // Get all users with company and department info
     const result = await query(
-      `SELECT u.id, u.email, u.name, u.role, u.avatar_url, u.phone, u.department,
-              u.company_id, u.department_id,
+      `SELECT u.id, u.email, u.name, r.code as role, u.avatar_url, u.phone, u.department,
+              u.company_id, u.department_id, u.role_id,
               u.is_active, u.email_verified, u.created_at, u.last_login_at,
               c.name as company_name, c.code as company_code,
-              d.name as department_name, d.code as department_code
+              d.name as department_name, d.code as department_code,
+              r.name as role_name
        FROM siem_app.users u
        LEFT JOIN "Company" c ON u.company_id = c.id
        LEFT JOIN "Department" d ON u.department_id = d.id
+       LEFT JOIN siem_app.roles r ON u.role_id = r.id
        ORDER BY u.created_at DESC`
     )
 
@@ -68,11 +73,14 @@ export async function POST(request: Request) {
 
     // Check if user is admin
     const userResult = await query(
-      'SELECT role FROM siem_app.users WHERE id = $1',
+      `SELECT r.code as role
+       FROM siem_app.users u
+       JOIN siem_app.roles r ON u.role_id = r.id
+       WHERE u.id = $1`,
       [session.user.id]
     )
 
-    if (userResult.rows[0]?.role !== 'admin') {
+    if (userResult.rows[0]?.role !== 'admin' && userResult.rows[0]?.role !== 'super_admin') {
       return NextResponse.json(
         { error: 'Forbidden: Admin access required' },
         { status: 403 }
@@ -102,20 +110,45 @@ export async function POST(request: Request) {
       )
     }
 
+    // Get role_id from role code (default to 'viewer' if not provided)
+    const roleCode = role || 'viewer'
+    const roleResult = await query(
+      'SELECT id FROM siem_app.roles WHERE code = $1',
+      [roleCode]
+    )
+
+    if (roleResult.rows.length === 0) {
+      return NextResponse.json(
+        { error: `Invalid role: ${roleCode}` },
+        { status: 400 }
+      )
+    }
+
+    const roleId = roleResult.rows[0].id
+
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10)
 
     // Create user
     const result = await query(
-      `INSERT INTO siem_app.users (email, name, password_hash, role, department, phone, company_id, department_id, is_active, email_verified)
+      `INSERT INTO siem_app.users (email, name, password_hash, role_id, department, phone, company_id, department_id, is_active, email_verified)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, true)
-       RETURNING id, email, name, role, avatar_url, phone, department, company_id, department_id, is_active, created_at`,
-      [email, name, passwordHash, role || 'viewer', department || null, phone || null, company_id || null, department_id || null]
+       RETURNING id, email, name, role_id, avatar_url, phone, department, company_id, department_id, is_active, created_at`,
+      [email, name, passwordHash, roleId, department || null, phone || null, company_id || null, department_id || null]
+    )
+
+    // Join with roles to get role code
+    const userWithRole = await query(
+      `SELECT u.*, r.code as role, r.name as role_name
+       FROM siem_app.users u
+       JOIN siem_app.roles r ON u.role_id = r.id
+       WHERE u.id = $1`,
+      [result.rows[0].id]
     )
 
     return NextResponse.json({
       success: true,
-      user: result.rows[0]
+      user: userWithRole.rows[0]
     })
   } catch (error) {
     console.error('Create user error:', error)
