@@ -19,11 +19,14 @@ export async function GET(
 
     // Check if user is admin
     const userResult = await query(
-      'SELECT role FROM siem_app.users WHERE id = $1',
+      `SELECT r.code as role
+       FROM siem_app.users u
+       JOIN siem_app.roles r ON u.role_id = r.id
+       WHERE u.id = $1`,
       [session.user.id]
     )
 
-    if (userResult.rows[0]?.role !== 'admin') {
+    if (userResult.rows[0]?.role !== 'admin' && userResult.rows[0]?.role !== 'super_admin') {
       return NextResponse.json(
         { error: 'Forbidden: Admin access required' },
         { status: 403 }
@@ -75,11 +78,14 @@ export async function PUT(
 
     // Check if user is admin
     const userResult = await query(
-      'SELECT role FROM siem_app.users WHERE id = $1',
+      `SELECT r.code as role
+       FROM siem_app.users u
+       JOIN siem_app.roles r ON u.role_id = r.id
+       WHERE u.id = $1`,
       [session.user.id]
     )
 
-    if (userResult.rows[0]?.role !== 'admin') {
+    if (userResult.rows[0]?.role !== 'admin' && userResult.rows[0]?.role !== 'super_admin') {
       return NextResponse.json(
         { error: 'Forbidden: Admin access required' },
         { status: 403 }
@@ -178,11 +184,14 @@ export async function DELETE(
 
     // Check if user is admin
     const userResult = await query(
-      'SELECT role FROM siem_app.users WHERE id = $1',
+      `SELECT r.code as role
+       FROM siem_app.users u
+       JOIN siem_app.roles r ON u.role_id = r.id
+       WHERE u.id = $1`,
       [session.user.id]
     )
 
-    if (userResult.rows[0]?.role !== 'admin') {
+    if (userResult.rows[0]?.role !== 'admin' && userResult.rows[0]?.role !== 'super_admin') {
       return NextResponse.json(
         { error: 'Forbidden: Admin access required' },
         { status: 403 }

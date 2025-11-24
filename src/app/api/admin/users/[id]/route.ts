@@ -20,11 +20,14 @@ export async function PUT(
 
     // Check if user is admin
     const userResult = await query(
-      'SELECT role FROM siem_app.users WHERE id = $1',
+      `SELECT r.code as role
+       FROM siem_app.users u
+       JOIN siem_app.roles r ON u.role_id = r.id
+       WHERE u.id = $1`,
       [session.user.id]
     )
 
-    if (userResult.rows[0]?.role !== 'admin') {
+    if (userResult.rows[0]?.role !== 'admin' && userResult.rows[0]?.role !== 'super_admin') {
       return NextResponse.json(
         { error: 'Forbidden: Admin access required' },
         { status: 403 }
@@ -51,8 +54,19 @@ export async function PUT(
       values.push(name)
     }
     if (role !== undefined) {
-      updates.push(`role = $${paramIndex++}`)
-      values.push(role)
+      // Convert role code to role_id
+      const roleResult = await query(
+        'SELECT id FROM siem_app.roles WHERE code = $1',
+        [role]
+      )
+      if (roleResult.rows.length === 0) {
+        return NextResponse.json(
+          { error: `Invalid role: ${role}` },
+          { status: 400 }
+        )
+      }
+      updates.push(`role_id = $${paramIndex++}`)
+      values.push(roleResult.rows[0].id)
     }
     if (department !== undefined) {
       updates.push(`department = $${paramIndex++}`)
@@ -78,14 +92,14 @@ export async function PUT(
     updates.push(`updated_at = CURRENT_TIMESTAMP`)
     values.push(userId)
 
-    const query = `
+    const updateQuery = `
       UPDATE siem_app.users
       SET ${updates.join(', ')}
       WHERE id = $${paramIndex}
-      RETURNING id, email, name, role, avatar_url, phone, department, is_active, updated_at
+      RETURNING id, email, name, role_id, avatar_url, phone, department, is_active, updated_at
     `
 
-    const result = await query(query, values)
+    const result = await query(updateQuery, values)
 
     if (result.rows.length === 0) {
       return NextResponse.json(
@@ -94,9 +108,18 @@ export async function PUT(
       )
     }
 
+    // Join with roles to get role code
+    const userWithRole = await query(
+      `SELECT u.*, r.code as role, r.name as role_name
+       FROM siem_app.users u
+       JOIN siem_app.roles r ON u.role_id = r.id
+       WHERE u.id = $1`,
+      [result.rows[0].id]
+    )
+
     return NextResponse.json({
       success: true,
-      user: result.rows[0]
+      user: userWithRole.rows[0]
     })
   } catch (error) {
     console.error('Update user error:', error)
@@ -124,11 +147,14 @@ export async function DELETE(
 
     // Check if user is admin
     const userResult = await query(
-      'SELECT role FROM siem_app.users WHERE id = $1',
+      `SELECT r.code as role
+       FROM siem_app.users u
+       JOIN siem_app.roles r ON u.role_id = r.id
+       WHERE u.id = $1`,
       [session.user.id]
     )
 
-    if (userResult.rows[0]?.role !== 'admin') {
+    if (userResult.rows[0]?.role !== 'admin' && userResult.rows[0]?.role !== 'super_admin') {
       return NextResponse.json(
         { error: 'Forbidden: Admin access required' },
         { status: 403 }
